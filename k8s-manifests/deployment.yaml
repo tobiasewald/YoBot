@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: my-app
-          image: ghcr.io/aiboosts/my-app:latest
+          image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
           ports:
             - containerPort: 8080
       imagePullSecrets:
