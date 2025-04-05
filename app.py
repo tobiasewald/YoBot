@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Ollama setup (for log analysis)
 def get_ollama_suggestions(log_data):
-    url = "http://ollama-service:8081/analyze-log"  # Ollama Service URL
+    url = "http://ollama-service:11434/analyze-log"  # Ollama Service URL
     response = requests.post(url, json={"log": log_data})
     if response.status_code == 200:
         return response.json().get("suggestions", "No suggestions available")

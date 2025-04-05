@@ -8,6 +8,6 @@ spec:
     app: ollama
   ports:
     - protocol: TCP
-      port: 8081
-      targetPort: 8081
+      port: 11434
+      targetPort: 11434
   type: ClusterIP
