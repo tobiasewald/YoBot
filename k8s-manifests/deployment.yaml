@@ -17,6 +17,6 @@ spec:
         - name: my-app
           image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
           ports:
-            - containerPort: 5000
+            - containerPort: 8080
       imagePullSecrets:
         - name: ghcr-secret  # Das ImagePullSecret, das du vorher erstellt hast
