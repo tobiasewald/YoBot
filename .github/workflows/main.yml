@@ -26,7 +26,6 @@ jobs:
       - name: Build the hello-docker Docker image
         run: |
           docker build -t ghcr.io/$USER/hello-docker-gcr-demo:latest .
-          docker run ghcr.io/$USER/hello-docker-gcr-demo:latest
 
       # Install Trivy (Specific version v0.60.1)
       - name: Install Trivy
