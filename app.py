@@ -5,14 +5,30 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 # Initialize Flask
 app = Flask(__name__)
 
+# Direkter Humor-Prompt als String im Code
+prompt = """
+You are a security analyst with deep knowledge of system logs and cybersecurity. Carefully inspect the syslog lines that follow.
+Identify any suspicious, abnormal, or malicious behavior. Summarize potential threats.
+Do not output anything related to recommendations. Just answer the analysis.
+"""
+
 # Ollama setup (for log analysis)
 def get_ollama_suggestions(log_data):
-    url = "http://ollama-service:11434/analyze-log"  # Ollama Service URL
-    response = requests.post(url, json={"log": log_data})
+    # Kombiniere den Log-Daten mit dem festgelegten Prompt
+    request_payload = {
+        "log": log_data,
+        "prompt": prompt
+    }
+    
+    # Ollama-API-Aufruf
+    url = "http://ollama-service:11434/generate"  # Ollama Service URL
+    response = requests.post(url, json=request_payload)
+    
     if response.status_code == 200:
-        return response.json().get("suggestions", "No suggestions available")
+        return response.json().get("text", "No suggestions available")
     else:
-        return "Error in Ollama service"
+        return "Oops! Something went wrong. I think the log's gone rogue!"
+
 
 # Hugging Face setup (GPT-2 for humor)
 model_name = "gpt2"
