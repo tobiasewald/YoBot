@@ -27,7 +27,7 @@ jobs:
 
       # Trivy Scan for vulnerabilities in the Docker image
       - name: Trivy Scan for vulnerabilities
-        uses: aquasecurity/trivy-action@v0.1.3
+        uses: aquasecurity/trivy-action@v0.30.0
         with:
           image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
         env:
