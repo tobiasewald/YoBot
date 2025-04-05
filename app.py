@@ -17,7 +17,7 @@ def get_ollama_suggestions(log_data):
     # Kombiniere den Log-Daten mit dem festgelegten Prompt
     request_payload = {
         "model": "llama3.2",
-        "prompt": prompt
+        "prompt": "You are a security analyst with deep knowledge of system logs and cybersecurity. Carefully inspect the syslog lines that follow. Identify any suspicious, abnormal, or malicious behavior. Summarize potential threats. Do not output anything related to recommendations. Just answer the analysis."
     }
     
     # Ollama-API-Aufruf
