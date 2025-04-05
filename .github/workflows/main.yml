@@ -17,7 +17,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN }}  # Use GHCR_TOKEN secret here
 
       # Build the Docker image
       - name: Build the hello-docker Docker image
@@ -25,7 +25,7 @@ jobs:
           docker build -t ghcr.io/yobot/hello-docker-gcr-demo:latest .
           docker run ghcr.io/yobot/hello-docker-gcr-demo:latest
 
-      # Push the Docker image to GHCR
+      # Push the Docker image to GitHub Container Registry
       - name: Push the Docker image to GitHub Container Registry
         run: |
           docker push ghcr.io/yobot/hello-docker-gcr-demo:latest
