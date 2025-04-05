@@ -1,41 +1,48 @@
-from flask import Flask, jsonify
-import random
+from flask import Flask, request, jsonify
 import requests
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
+# Initialize Flask
 app = Flask(__name__)
 
+# Ollama setup (for log analysis)
 def get_ollama_suggestions(log_data):
-    url = "http://localhost:8080/analyze-log"
+    url = "http://ollama-service:8081/analyze-log"  # Ollama Service URL
     response = requests.post(url, json={"log": log_data})
     if response.status_code == 200:
-        return response.json()["suggestions"]
+        return response.json().get("suggestions", "No suggestions available")
     else:
-        return "Keine Vorschläge verfügbar"
+        return "Error in Ollama service"
 
-TELEGRAM_BOT_TOKEN = "dein-bot-token"
-TELEGRAM_CHAT_ID = "deine-chat-id"
+# Hugging Face setup (GPT-2 for humor)
+model_name = "gpt2"
+model = GPT2LMHeadModel.from_pretrained(model_name)
+tokenizer = GPT2Tokenizer.from_pretrained(model_name)
 
-def send_telegram_message(message):
-    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
-    requests.post(telegram_url, data=payload)
+def generate_humor(error_message):
+    input_text = f"Error detected: {error_message}. How do we fix it humorously?"
+    inputs = tokenizer.encode(input_text, return_tensors="pt")
+    outputs = model.generate(inputs, max_length=100, num_return_sequences=1)
+    humor = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return humor
 
-@app.route('/')
-def hello():
-    return "Hello, world!"
-
-@app.route('/error')
-def error():
-    errors = ["Datenbankverbindung fehlgeschlagen", "Speicherleck entdeckt", "Unbefugter Zugriff erkannt"]
-    error_message = random.choice(errors)
-
-    # KI schlägt Fixes vor
-    suggestions = get_ollama_suggestions(error_message)
-
-    # Telegram-Nachricht senden
-    send_telegram_message(f"Fehler aufgetreten: {error_message}")
-
-    return jsonify({"error": error_message, "fix_suggestions": suggestions}), 500
+# Flask route for error analysis and humor generation
+@app.route('/analyze-log', methods=['POST'])
+def analyze_log():
+    log_data = request.json.get('log', '')
+    if not log_data:
+        return jsonify({'error': 'No log data provided'}), 400
+    
+    # Get error suggestions from Ollama
+    error_message = get_ollama_suggestions(log_data)
+    
+    # Generate humor based on the error message (Hugging Face GPT-2)
+    humor_response = generate_humor(error_message)
+    
+    return jsonify({
+        'error_message': error_message,
+        'humor': humor_response
+    })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=5000)
