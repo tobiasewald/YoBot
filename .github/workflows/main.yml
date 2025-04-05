@@ -34,7 +34,7 @@ jobs:
       # Scan the Docker image for vulnerabilities
       - name: Scan Docker image for vulnerabilities
         run: |
-          trivy image ghcr.io/${{ github.actor}}/hello-docker-gcr-demo:latest
+          trivy image ghcr.io/${{ github.actor}}/hello-docker-gcr-demo:latest --severity HIGH,CRITICAL --exit-code 1
         env:
           TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: Set severity levels to scan for
 
