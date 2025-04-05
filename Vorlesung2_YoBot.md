@@ -1,6 +1,6 @@
 To run a pipeline in GitHub, you're likely referring to **GitHub Actions**, which is GitHub's native CI/CD solution for automating workflows, such as building, testing, and deploying code.
 
-### Here’s a step-by-step guide on how to run a GitHub Actions pipeline (workflow):
+### Here’s a step-by-step guide on how to run a GitHub Actions pipeline (workflow): 
 
 ### 1. **Create a GitHub Actions Workflow File**
 
