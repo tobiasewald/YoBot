@@ -25,6 +25,14 @@ jobs:
           docker build -t ghcr.io/aiboosts/hello-docker-gcr-demo:latest .
           docker run ghcr.io/aiboosts/hello-docker-gcr-demo:latest
 
+      # Trivy Scan for vulnerabilities in the Docker image
+      - name: Trivy Scan for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.1.3
+        with:
+          image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
+        env:
+          TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: You can set severity levels to scan for
+
       # Push the Docker image to GitHub Container Registry
       - name: Push the Docker image to GitHub Container Registry
         run: |
