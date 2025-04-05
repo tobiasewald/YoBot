@@ -1,316 +1,118 @@
-Klar! Hier ist das vollständige **YoBot System Base** Step-by-Step mit allen nötigen Codes und Erklärungen:
+To run a pipeline in GitHub, you're likely referring to **GitHub Actions**, which is GitHub's native CI/CD solution for automating workflows, such as building, testing, and deploying code.
 
----
+### Here’s a step-by-step guide on how to run a GitHub Actions pipeline (workflow):
 
-## **Schritt 1: GitLab CI/CD Setup**
-### Ziel: Automatisiere den Build-Prozess, das Deployment und das Testen der Anwendung.
+### 1. **Create a GitHub Actions Workflow File**
 
-**1.1 Erstelle ein GitLab-Repository**
-- Melde dich bei GitLab an und erstelle ein neues Repository.
-- Klone das Repository lokal.
+First, you need to create a workflow configuration file. These workflow files are defined in YAML and are stored in the `.github/workflows` directory of your repository.
+
+1. **Create the necessary directory:**
+
+   In your repository, create the following directory structure:
+
+   ```
+   .github/
+     workflows/
+       main.yml  # This is the workflow file
+   ```
+
+2. **Create your workflow file** (`main.yml`):
+
+   Here’s an example of a simple workflow file that runs on push events (e.g., when code is pushed to the repository):
+
+   ```yaml
+   name: CI Pipeline
+
+   on:
+     push:
+       branches:
+         - main  # Trigger on pushes to the 'main' branch
+     pull_request:
+       branches:
+         - main  # Trigger on pull requests targeting 'main' branch
+
+   jobs:
+     build:
+       runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
+       steps:
+         - name: Checkout code
+           uses: actions/checkout@v2  # Check out the code from the repository
+
+         - name: Set up Python
+           uses: actions/setup-python@v2
+           with:
+             python-version: '3.8'  # Set up Python 3.8 (adjust to your needs)
+
+         - name: Install dependencies
+           run: |
+             python -m pip install --upgrade pip
+             pip install -r requirements.txt  # Install dependencies from 'requirements.txt'
+
+         - name: Run tests
+           run: |
+             pytest  # Or any other command to run your tests
+   ```
+
+   This example workflow:
+   - Runs on push events to the `main` branch or pull requests targeting the `main` branch.
+   - Checks out the code, sets up Python 3.8, installs dependencies, and runs tests using `pytest`.
+
+### 2. **Push Your Workflow File**
+
+Once you've created your workflow file, commit and push it to your GitHub repository:
 
 ```bash
-git clone https://gitlab.com/dein-username/yobot.git
-cd yobot
+git add .github/workflows/main.yml
+git commit -m "Add CI pipeline"
+git push origin main
 ```
 
-**1.2 Erstelle eine `.gitlab-ci.yml` Datei**
+### 3. **View the Pipeline Run in GitHub Actions**
 
-Diese Datei beschreibt die CI/CD-Pipeline, die automatisch den Code baut, das Docker-Image erstellt, das Deployment durchführt, und Tests ausführt.
+Once the workflow file is pushed to the repository, GitHub Actions will automatically run the pipeline based on the conditions specified in the YAML file.
+
+1. Go to your GitHub repository.
+2. Navigate to the **Actions** tab at the top.
+3. You will see a list of workflows and their runs. Click on the workflow run to see detailed logs.
+
+### 4. **Manually Trigger a GitHub Actions Workflow (Optional)**
+
+If you want to manually trigger the pipeline (workflow) without pushing code or creating a pull request, you can set up a **workflow_dispatch** trigger in your workflow file.
+
+Example:
 
 ```yaml
-stages:
-  - build
-  - deploy
-  - test
-  - analyze
-  - alert
-
-variables:
-  APP_NAME: "yobot"
-  IMAGE_TAG: "latest"
-
-# Build Phase
-build:
-  stage: build
-  script:
-    - docker build -t $CI_REGISTRY_IMAGE:$IMAGE_TAG .
-    - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
-
-# Deploy Phase (Kubernetes)
-k8s-deploy:
-  stage: deploy
-  script:
-    - kubectl apply -f k8s/deployment.yaml
-
-# Test Phase
-test:
-  stage: test
-  script:
-    - echo "Tests abgeschlossen! Fehler? Nö. 😎"
-
-# Log-Analyse mit Ollama
-ollama-analyze:
-  stage: analyze
-  script:
-    - |
-      curl -s http://localhost:11434/api/generate \
-      -d '{"model": "llama3", "prompt": "Analysiere diesen Kubernetes-Fehler sarkastisch: [ERROR] Pod failed due to OOM!", "stream": false}'
-
-# Prometheus Alertmanager für Meme-Warnungen
-send-meme:
-  stage: alert
-  script:
-    - |
-      curl -X POST "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL" \
-      -H "Content-Type: application/json" \
-      -d '{"content": "🔥 Alert: Pod has exploded! 💥\n![Meme](https://i.imgflip.com/5w3f8l.jpg)"}'
+on:
+  workflow_dispatch:  # This allows you to manually trigger the pipeline
 ```
 
----
+With this setup, you can go to the **Actions** tab in your GitHub repository, select your workflow, and then click the "Run workflow" button to manually trigger it.
 
-## **Schritt 2: Docker Setup & Containerisierung**
-### Ziel: Erstelle und deploye deinen YoBot in einem Docker-Container.
+### 5. **Monitoring and Debugging the Pipeline**
 
-**2.1 Erstelle eine `Dockerfile`**
+- **Logs**: If any step in your pipeline fails, you can view the logs of each individual step in the Actions interface.
+- **Artifacts**: You can configure GitHub Actions to upload artifacts (e.g., test results, build outputs) for further analysis.
 
-```Dockerfile
-# Basis-Image
-FROM python:3.9-slim
-
-# Arbeitsverzeichnis
-WORKDIR /app
-
-# Abhängigkeiten installieren
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Code in den Container kopieren
-COPY . .
-
-# FastAPI Server starten
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
-```
-
-**2.2 Erstelle eine `requirements.txt` für FastAPI & weitere Abhängigkeiten**
-
-```text
-fastapi
-httpx
-uvicorn
-```
-
-**2.3 Build das Docker-Image**
-
-```bash
-docker build -t yobot .
-```
-
-**2.4 Teste den Container lokal**
-
-```bash
-docker run -p 8080:8080 yobot
-```
-
----
-
-## **Schritt 3: Kubernetes Deployment**
-### Ziel: YoBot in einem Kubernetes-Cluster deployen.
-
-**3.1 Erstelle eine Kubernetes Deployment YAML-Datei (`k8s/deployment.yaml`)**
+Example of uploading an artifact (e.g., test results):
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: yobot
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: yobot
-  template:
-    metadata:
-      labels:
-        app: yobot
-    spec:
-      containers:
-        - name: yobot
-          image: yobot:latest
-          ports:
-            - containerPort: 8080
+- name: Upload test results
+  uses: actions/upload-artifact@v2
+  with:
+    name: test-results
+    path: path/to/test-results/*
 ```
 
-**3.2 Erstelle ein Service für den Zugriff auf YoBot**
+### 6. **Advanced Use-Cases**
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: yobot-service
-spec:
-  selector:
-    app: yobot
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: LoadBalancer
-```
+You can extend the GitHub Actions workflow to do more complex tasks such as:
+- Deploying to a server or cloud service
+- Running on different operating systems (e.g., `windows-latest`, `macos-latest`, or `ubuntu-latest`)
+- Running a pipeline only on specific files or directories changes
+- Caching dependencies to speed up builds
 
-**3.3 Deploy auf Kubernetes**
-
-```bash
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-```
-
----
-
-## **Schritt 4: FastAPI-Server & Ollama-Integration**
-### Ziel: Verwende FastAPI, um Endpoints für Log-Analyse und Status zu erstellen und Ollama für die KI-gestützte Log-Analyse zu integrieren.
-
-**4.1 Erstelle die `main.py` Datei für FastAPI**
-
-```python
-from fastapi import FastAPI, Request
-import httpx
-import os
-
-app = FastAPI()
-
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-OLLAMA_URL = "http://localhost:11434/api/generate"
-GRAFANA_URL = "http://localhost:3000"
-
-@app.post("/analyze")
-async def analyze_log(req: Request):
-    body = await req.json()
-    log = body.get("log", "[ERROR] unknown crash 🧨")
-    
-    prompt = f"""
-    Fasse diesen Log zusammen, gib eine sarkastische Erklärung ab und schlag ein Meme vor:
-    {log}
-    """
-    
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(OLLAMA_URL, json={
-            "model": "llama3",
-            "prompt": prompt,
-            "stream": False
-        })
-        result = resp.json()["response"]
-    
-    await send_to_discord(result)
-    return {"response": result}
-
-@app.get("/status")
-async def status():
-    grafana_snap = f"{GRAFANA_URL}/d-solo/YOBOT/yobot-dashboard?panelId=2&theme=dark"
-    message = f"📊 Aktueller Clusterstatus: {grafana_snap}"
-    await send_to_discord(message)
-    return {"grafana": grafana_snap}
-
-async def send_to_discord(content: str):
-    async with httpx.AsyncClient() as client:
-        await client.post(DISCORD_WEBHOOK_URL, json={"content": content})
-```
-
-**4.2 Starte den FastAPI-Server**
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8080
-```
-
----
-
-## **Schritt 5: Prometheus & Grafana Setup**
-### Ziel: Prometheus für Metriken und Grafana für Dashboards integrieren.
-
-**5.1 Erstelle eine `helmfile.yaml` Datei für Prometheus und Grafana**
-
-```yaml
-repositories:
-  - name: grafana
-    url: https://grafana.github.io/helm-charts
-  - name: prometheus-community
-    url: https://prometheus-community.github.io/helm-charts
-
-releases:
-  - name: kube-prometheus-stack
-    namespace: monitoring
-    chart: prometheus-community/kube-prometheus-stack
-    version: 55.5.0
-    values:
-      grafana:
-        adminPassword: prom-operator
-        service:
-          type: ClusterIP
-        dashboards:
-          default:
-            log-dashboard:
-              json: |
-                {
-                  "title": "YoBot Log Overview",
-                  "panels": [
-                    {
-                      "type": "logs",
-                      "title": "Live Logs",
-                      "datasource": "Loki",
-                      "targets": [
-                        {
-                          "expr": "{app=\"yobot\"}"
-                        }
-                      ]
-                    }
-                  ]
-                }
-```
-
-**5.2 Helm Setup für Grafana & Prometheus**
-
-```bash
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-helmfile apply
-```
-
----
-
-## **Schritt 6: Discord Webhook für Alerts**
-### Ziel: Sende Alerts mit Memes an Discord.
-
-**6.1 Erstelle ein Discord Webhook**
-
-- Gehe zu deinem Discord-Server und erstelle einen Webhook in den Server-Einstellungen.
-- Kopiere die Webhook-URL.
-
-**6.2 Erstelle den Webhook-Alert in deiner CI/CD-Pipeline**
-
-```yaml
-send-meme:
-  stage: alert
-  script:
-    - |
-      curl -X POST "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL" \
-      -H "Content-Type: application/json" \
-      -d '{"content": "🔥 Alert: Pod has exploded! 💥\n![Meme](https://i.imgflip.com/5w3f8l.jpg)"}'
-```
-
----
-
-### **Zusammenfassung des Setups:**
-1. **GitLab CI/CD** für Build, Deployment und Tests.
-2. **Docker & Kubernetes** für Containerisierung und Orchestrierung.
-3. **FastAPI** für Log-Analyse und Status-Endpoints.
-4. **Prometheus & Grafana** für Metriken und Dashboards.
-5. **Ollama** für KI-gestützte Log-Analyse.
-6. **Discord Webhook** für humorvolle Alerts und Fehler-Warnungen.
-
----
-
-Jetzt ist dein **YoBot System Base** komplett und bereit! 🎉
+Let me know if you need a specific use-case or any further customization!
 
 
 
