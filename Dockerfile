@@ -1,4 +1,9 @@
-FROM node:alpine
-COPY . /app
+FROM python:3.9-slim
+
 WORKDIR /app
-CMD node app.js
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]

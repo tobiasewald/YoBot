@@ -128,3 +128,5 @@ In your repository, create the following directory structure:
 
 
 https://github.com/renovatebot/renovate/blob/main/docs/usage/getting-started/installing-onboarding.md
+
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
