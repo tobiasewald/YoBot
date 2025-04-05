@@ -22,10 +22,10 @@ jobs:
       # Build the Docker image
       - name: Build the hello-docker Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/hello-docker-gcr-demo:latest .
-          docker run ghcr.io/${{ github.repository }}/hello-docker-gcr-demo:latest
+          docker build -t ghcr.io/yobot/hello-docker-gcr-demo:latest .
+          docker run ghcr.io/yobot/hello-docker-gcr-demo:latest
 
       # Push the Docker image to GHCR
       - name: Push the Docker image to GitHub Container Registry
         run: |
-          docker push ghcr.io/${{ github.repository }}/hello-docker-gcr-demo:latest
+          docker push ghcr.io/yobot/hello-docker-gcr-demo:latest
