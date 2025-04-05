@@ -18,3 +18,5 @@ spec:
           image: ghcr.io/aiboosts/my-app:latest
           ports:
             - containerPort: 8080
+      imagePullSecrets:
+        - name: ghcr-secret  # Das ImagePullSecret, das du vorher erstellt hast
