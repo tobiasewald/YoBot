@@ -16,24 +16,29 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}  # Use GHCR_TOKEN secret here
+          username: ${{ github.actor }}  # Use the GitHub username (actor)
+          password: ${{ secrets.GHCR_TOKEN }}  # Use the secret token
 
       # Build the Docker image
       - name: Build the hello-docker Docker image
         run: |
-          docker build -t ghcr.io/aiboosts/hello-docker-gcr-demo:latest .
-          docker run ghcr.io/aiboosts/hello-docker-gcr-demo:latest
+          docker build -t ghcr.io/${{ github.actor }}/hello-docker-gcr-demo:latest .
+          docker run ghcr.io/${{ github.actor }}/hello-docker-gcr-demo:latest
 
-      # Trivy Scan for vulnerabilities in the Docker image
-      - name: Trivy Scan for vulnerabilities
-        uses: aquasecurity/trivy-action@v0.30.0
+      # Install Trivy (Specific version v0.60.1)
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.0
         with:
-          image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
+          version: v0.60.1  # Specify the desired version
+
+      # Scan the Docker image for vulnerabilities
+      - name: Scan Docker image for vulnerabilities
+        run: |
+          trivy image ghcr.io/${{ github.actor}}/hello-docker-gcr-demo:latest
         env:
-          TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: You can set severity levels to scan for
+          TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: Set severity levels to scan for
 
       # Push the Docker image to GitHub Container Registry
       - name: Push the Docker image to GitHub Container Registry
         run: |
-          docker push ghcr.io/aiboosts/hello-docker-gcr-demo:latest
+          docker push ghcr.io/${{ github.actor}}/hello-docker-gcr-demo:latest
