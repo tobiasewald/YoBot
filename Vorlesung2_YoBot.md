@@ -124,3 +124,7 @@ In your repository, create the following directory structure:
 .github/
   workflows/
     main.yml  # This is the workflow file
+
+
+
+https://github.com/renovatebot/renovate/blob/main/docs/usage/getting-started/installing-onboarding.md

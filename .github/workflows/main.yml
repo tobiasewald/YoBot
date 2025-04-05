@@ -2,6 +2,9 @@ name: publish
 
 on: [push]
 
+env:
+  USER: "aiboosts"
+
 jobs:
   publish-hello-docker-image:
     runs-on: ubuntu-latest
@@ -22,8 +25,8 @@ jobs:
       # Build the Docker image
       - name: Build the hello-docker Docker image
         run: |
-          docker build -t ghcr.io/${{ github.actor }}/hello-docker-gcr-demo:latest .
-          docker run ghcr.io/${{ github.actor }}/hello-docker-gcr-demo:latest
+          docker build -t ghcr.io/$USER/hello-docker-gcr-demo:latest .
+          docker run ghcr.io/$USER/hello-docker-gcr-demo:latest
 
       # Install Trivy (Specific version v0.60.1)
       - name: Install Trivy
@@ -34,11 +37,11 @@ jobs:
       # Scan the Docker image for vulnerabilities
       - name: Scan Docker image for vulnerabilities
         run: |
-          trivy image ghcr.io/${{ github.actor}}/hello-docker-gcr-demo:latest --severity HIGH,CRITICAL --exit-code 1
+          trivy image ghcr.io/$USER/hello-docker-gcr-demo:latest --severity HIGH,CRITICAL --exit-code 1
         env:
           TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: Set severity levels to scan for
 
       # Push the Docker image to GitHub Container Registry
       - name: Push the Docker image to GitHub Container Registry
         run: |
-          docker push ghcr.io/${{ github.actor}}/hello-docker-gcr-demo:latest
+          docker push ghcr.io/$USER/hello-docker-gcr-demo:latest
