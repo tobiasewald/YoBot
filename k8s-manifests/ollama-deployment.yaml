@@ -17,4 +17,4 @@ spec:
         - name: ollama
           image: ollama/ollama:latest
           ports:
-            - containerPort: 8081
+            - containerPort: 11434
