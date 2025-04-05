@@ -16,12 +16,12 @@ Do not output anything related to recommendations. Just answer the analysis.
 def get_ollama_suggestions(log_data):
     # Kombiniere den Log-Daten mit dem festgelegten Prompt
     request_payload = {
-        "log": log_data,
+        "model": "llama3.2",
         "prompt": prompt
     }
     
     # Ollama-API-Aufruf
-    url = "http://ollama-service:11434/generate"  # Ollama Service URL
+    url = "http://ollama-service:11434/api/generate"  # Ollama Service URL
     response = requests.post(url, json=request_payload)
     
     if response.status_code == 200:

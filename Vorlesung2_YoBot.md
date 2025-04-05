@@ -132,3 +132,13 @@ https://github.com/renovatebot/renovate/blob/main/docs/usage/getting-started/ins
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d
+
+https://github.com/ollama/ollama/blob/main/docs/api.md
+
+curl http://localhost:11434/api/pull -d '{
+  "model": "llama3.2"
+}'
+
+curl http://localhost:11434/api/ps
+
+ curl http://localhost:11434/api/version
