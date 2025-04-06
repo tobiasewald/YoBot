@@ -57,8 +57,11 @@ async def send_discord_notification(meme_path, results):
 
         # Asynchronously send the webhook using aiohttp
         async with aiohttp.ClientSession() as session:
-            # Convert the webhook to JSON manually for the POST request
-            payload = webhook.payload
+            # Build the payload manually for the POST request
+            payload = {
+                "content": webhook.content,
+                "embeds": webhook.embeds
+            }
             response = await session.post(webhook.url, json=payload)
 
             if response.status == 204:
