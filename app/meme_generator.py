@@ -29,7 +29,7 @@ def create_meme(vuln_name, severity):
     text_position = (50, 50)
     draw.text(text_position, funny_text, font=font, fill="white")
 
-    meme_image_path = f"app/memes/{vuln_name}_{severity}.jpg"
+    meme_image_path = f"memes/{vuln_name}_{severity}.jpg"
     meme_image.save(meme_image_path)
 
     return meme_image_path
