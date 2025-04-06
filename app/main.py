@@ -55,9 +55,12 @@ async def send_discord_notification(meme_path, results):
         embed.add_embed_field(name="Vulnerability", value=results['vuln_name'])
         webhook.add_embed(embed)
 
-        # Use aiohttp for asynchronous HTTP request
+        # Asynchronously send the webhook using aiohttp
         async with aiohttp.ClientSession() as session:
-            response = await session.post(webhook.url, json=webhook.json())
+            # Convert the webhook to JSON manually for the POST request
+            payload = webhook.payload
+            response = await session.post(webhook.url, json=payload)
+
             if response.status == 204:
                 logging.info("Discord notification sent successfully!")
             else:
