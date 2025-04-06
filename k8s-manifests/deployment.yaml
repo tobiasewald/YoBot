@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app
+  name: fastapi-app
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: my-app
+      app: fastapi
   template:
     metadata:
       labels:
-        app: my-app
+        app: fastapi
     spec:
       containers:
-        - name: my-app
+        - name: fastapi
           image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
           ports:
             - containerPort: 8080

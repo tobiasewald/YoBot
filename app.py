@@ -81,6 +81,10 @@ def get_ollama_suggestions(log_data):
 @app.route('/analyze-log', methods=['POST'])
 def analyze_log():
     log_data = request.json.get('log', '')
+    
+    # Debugging log data
+    print("Received log data:", log_data)
+    
     if not log_data:
         return jsonify({'error': 'No log data provided'}), 400
     
@@ -88,5 +92,6 @@ def analyze_log():
     
     return jsonify({'error_message': error_message})
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=True)

@@ -1,5 +1,7 @@
-Flask==2.0.2
-werkzeug==2.0.2
-requests==2.26.0
-# transformers==4.15.0
-# torch==1.10.0
+fastapi
+uvicorn
+Pillow
+discord-webhook
+langchain
+faiss-cpu
+ollama

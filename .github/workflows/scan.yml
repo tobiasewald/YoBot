@@ -1,4 +1,4 @@
-name: publish
+name: Docker Image Scan
 
 on: [push]
 
@@ -6,7 +6,7 @@ env:
   USER: "aiboosts"
 
 jobs:
-  publish-hello-docker-image:
+  trivy_scan:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,7 +36,7 @@ jobs:
       # Scan the Docker image for vulnerabilities
       - name: Scan Docker image for vulnerabilities
         run: |
-          trivy image ghcr.io/$USER/hello-docker-gcr-demo:latest 
+          trivy image --format json --output trivy_output.json ghcr.io/$USER/hello-docker-gcr-demo:latest
         env:
           TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: Set severity levels to scan for --severity HIGH,CRITICAL --exit-code 1
 

@@ -1,20 +1,26 @@
-# Verwende ein Basis-Image mit Python
-FROM python:3.9-slim
+# /Dockerfile
 
-# Setze das Arbeitsverzeichnis im Container
+# Use an official Python image
+FROM python:3.11-slim
+
+# Set work directory
 WORKDIR /app
 
-# Kopiere die requirements.txt Datei ins Container
-COPY requirements.txt /app/
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installiere die Abhängigkeiten
+# Copy app files
+COPY ./app /app
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Kopiere den Rest des Codes ins Container
-COPY . /app/
-
-# Exponiere den Port, auf dem die Flask-App läuft
+# Expose FastAPI port
 EXPOSE 8080
 
-# Starte die Flask-Anwendung
-CMD ["python", "app.py"]
+# Run the FastAPI app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
