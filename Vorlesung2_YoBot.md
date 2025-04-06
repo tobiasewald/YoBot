@@ -142,3 +142,7 @@ curl http://localhost:11434/api/pull -d '{
 curl http://localhost:11434/api/ps
 
  curl http://localhost:11434/api/version
+
+
+
+ kubectl port-forward svc/fastapi-service 8080:8080

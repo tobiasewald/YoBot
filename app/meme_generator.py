@@ -5,7 +5,7 @@ import os
 # Define meme templates (you can replace these with your actual meme images)
 MEME_TEMPLATES = [
     "meme_template_1.jpg",
-    "meme_template_2.jpg",
+    "meme_template_2.png",
     "meme_template_3.jpg",
     "meme_template_4.gif",
 ]
@@ -20,7 +20,7 @@ FUNNY_MESSAGES = {
 
 def create_meme(vuln_name, severity):
     meme_template = random.choice(MEME_TEMPLATES)
-    meme_image = Image.open(f"app/templates/{meme_template}")
+    meme_image = Image.open(f"templates/{meme_template}")
     draw = ImageDraw.Draw(meme_image)
 
     font = ImageFont.load_default()
