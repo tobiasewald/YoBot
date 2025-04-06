@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import os
-from .meme_generator import create_meme
-from .analyzer import load_trivy_report, analyze_logs
+from meme_generator import create_meme
+from analyzer import load_trivy_report, analyze_logs
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
 app = FastAPI()
