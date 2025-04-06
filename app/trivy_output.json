@@ -1,0 +1,35 @@
+{
+    "ArtifactName": "my-docker-image:latest",
+    "ArtifactType": "Docker",
+    "Vulnerabilities": [
+      {
+        "VulnerabilityID": "CVE-2020-12345",
+        "PkgName": "libc6",
+        "InstalledVersion": "2.27-3ubuntu1",
+        "FixedVersion": "2.31-0ubuntu9.9",
+        "Severity": "HIGH",
+        "Description": "A vulnerability in libc6 could allow attackers to execute arbitrary code.",
+        "References": [
+          "https://security-tracker.debian.org/tracker/CVE-2020-12345"
+        ],
+        "CVE": "CVE-2020-12345",
+        "CWE": "CWE-79",
+        "Layer": "sha256:abcd1234efgh5678ijklmnop"
+      },
+      {
+        "VulnerabilityID": "CVE-2021-23456",
+        "PkgName": "openssl",
+        "InstalledVersion": "1.1.1g-1ubuntu2",
+        "FixedVersion": "1.1.1k-1ubuntu3",
+        "Severity": "MEDIUM",
+        "Description": "A vulnerability in openssl allows attackers to cause a denial of service.",
+        "References": [
+          "https://www.openssl.org/news/vulnerabilities.html"
+        ],
+        "CVE": "CVE-2021-23456",
+        "CWE": "CWE-119",
+        "Layer": "sha256:abcd5678efgh9101mnopqrst"
+      }
+    ]
+  }
+  
