@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: my-app
+  name: fastapi
   namespace: argocd
 spec:
   destination:
@@ -10,5 +10,5 @@ spec:
   source:
     repoURL: 'https://github.com/aiboosts/YoBot'
     targetRevision: HEAD
-    path: 'k8s-manifests'
+    path: 'k8s'
   project: default
