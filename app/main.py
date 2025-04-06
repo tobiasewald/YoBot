@@ -13,7 +13,9 @@ logging.basicConfig(level=logging.DEBUG)
 app = FastAPI()
 
 # Discord Webhook URL (set in .env file)
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+# DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
+DISCORD_WEBHOOK_URL='https://discord.com/api/webhooks/1358542446031798624/S-90hr030GtqcMqfWg6rr5YWlQO7qVcZHK0RyvyyQUDq6Y6r54lliQ8XpEoLsmgdEtTi'
 
 @app.post("/analyze_trivy_logs/")
 async def analyze_trivy_logs():
