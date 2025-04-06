@@ -5,3 +5,4 @@ discord-webhook
 langchain
 faiss-cpu
 ollama
+aiohttp
