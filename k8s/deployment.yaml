@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: fastapi
-          image: ghcr.io/aiboosts/hello-docker-gcr-demo:latest
+          image: ghcr.io/aiboosts/hello-docker-with-trivy-output:latest
           ports:
             - containerPort: 8080
       imagePullSecrets:
