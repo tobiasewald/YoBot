@@ -33,7 +33,7 @@ async def analyze_trivy_logs():
         logging.debug(f"Meme Path: {meme_path}")
 
         # Send Discord notification with meme
-        await send_discord_notification(meme_path, results)
+        await send_discord_notification(results)
 
         return {"message": "Logs analyzed and meme created!"}
 
@@ -42,33 +42,36 @@ async def analyze_trivy_logs():
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 # Asynchronous Discord notification with meme
-async def send_discord_notification(meme_path, results):
+async def send_discord_notification(results):
     try:
-        if DISCORD_WEBHOOK_URL is None:
+        # Check if the webhook URL is configured
+        if not DISCORD_WEBHOOK_URL:
             logging.error("Discord Webhook URL is not set.")
             raise HTTPException(status_code=500, detail="Discord Webhook URL is not set.")
-        
-        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
-        embed = DiscordEmbed(title="Vulnerability Alert!", description="Check out this vulnerability!", color=242424)
-        embed.set_image(url=meme_path)
-        embed.add_embed_field(name="Severity", value=results['severity'])
-        embed.add_embed_field(name="Vulnerability", value=results['vuln_name'])
-        webhook.add_embed(embed)
 
-        # Asynchronously send the webhook using aiohttp
+        # Build a funny message using vulnerability results
+        funny_message = (
+            f"🛡️ YoBot Report is here!\n\n"
+            f"🔍 Something suspicious popped up in the container...\n"
+            f"🔥 **{results.get('vuln_name', 'Unknown vulnerability')}** – sounds dangerous, right?\n"
+            f"🧨 Severity: **{results.get('severity', 'Not specified')}**\n"
+            f"💡 Suggestion: Maybe just unplug the server? 😅"
+        )
+
+        # Create the payload for Discord
+        payload = {
+            "content": funny_message
+        }
+
+        # Send the POST request to Discord
         async with aiohttp.ClientSession() as session:
-            # Build the payload manually for the POST request
-            payload = {
-                "content": webhook.content,
-                "embeds": webhook.embeds
-            }
-            response = await session.post(webhook.url, json=payload)
-
-            if response.status == 204:
-                logging.info("Discord notification sent successfully!")
-            else:
-                logging.error(f"Failed to send Discord notification. Status code: {response.status}")
-                raise HTTPException(status_code=500, detail=f"Failed to send Discord notification. Status code: {response.status}")
+            async with session.post(DISCORD_WEBHOOK_URL, json=payload) as response:
+                if response.status in [200, 204]:
+                    logging.info("Funny Discord message sent successfully!")
+                else:
+                    text = await response.text()
+                    logging.error(f"Discord error {response.status}: {text}")
+                    raise HTTPException(status_code=500, detail=f"Discord error {response.status}: {text}")
 
     except Exception as e:
         logging.error(f"Error sending Discord notification: {e}")
