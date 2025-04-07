@@ -146,3 +146,7 @@ curl http://localhost:11434/api/ps
 
 
  kubectl port-forward svc/fastapi-service 8080:8080
+
+
+ DISCORD_WEBHOOK_URL='https://discord.com/api/webhooks/1358542446031798624/S-90hr030GtqcMqfWg6rr5YWlQO7qVcZHK0RyvyyQUDq6Y6r54lliQ8XpEoLsmgdEtTi'
+

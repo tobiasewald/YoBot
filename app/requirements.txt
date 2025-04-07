@@ -1,8 +1,9 @@
-fastapi
-uvicorn[standard]
-Pillow
 discord-webhook
 langchain
 faiss-cpu
 ollama
+python-dotenv
+requests
+openai
 aiohttp
+asyncio

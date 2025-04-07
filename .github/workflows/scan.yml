@@ -43,7 +43,7 @@ jobs:
       # Build the new Docker image with trivy_output.json
       - name: Build the new Docker image with trivy_output.json
         run: |
-          docker build -t ghcr.io/$USER/hello-docker-with-trivy-output:latest -f Dockerfile.trivy-output .
+          docker build -t ghcr.io/$USER/hello-docker-with-trivy-output:latest -f Dockerfile.trivy-analysis .
       
       # Push the Docker image to GitHub Container Registry
       - name: Push the Docker image to GitHub Container Registry

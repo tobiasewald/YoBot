@@ -3,3 +3,5 @@ FROM ghcr.io/aiboosts/hello-docker-gcr-demo:latest
 
 # Copy the Trivy scan output file into the image
 COPY trivy_output.json /app/trivy_output.json
+
+CMD ["python", "main.py"]
