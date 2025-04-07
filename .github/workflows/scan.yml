@@ -40,11 +40,13 @@ jobs:
         env:
           TRIVY_SEVERITY: HIGH,CRITICAL  # Optional: Set severity levels to scan for --severity HIGH,CRITICAL --exit-code 1
       
+      # Upload the Scan result
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: trivy-scan
           path: trivy_output.json
+
       # Push the Docker image to GitHub Container Registry
       - name: Push the Docker image to GitHub Container Registry
         run: |
