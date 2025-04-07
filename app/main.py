@@ -6,7 +6,7 @@ import asyncio
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import FAISS
 from langchain.llms import Ollama
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_ollama.embeddings import OllamaEmbeddings  # Ollama Embeddings importieren
 from dotenv import load_dotenv
 import aiohttp
 
@@ -56,7 +56,8 @@ def load_trivy_logs(log_path="/app/trivy_output.json"):
 def setup_rag(trivy_logs):
     logging.debug("RAG-System wird eingerichtet...")
 
-    embeddings = OpenAIEmbeddings()
+    # Verwende OllamaEmbeddings statt OpenAIEmbeddings
+    embeddings = OllamaEmbeddings()
 
     faiss_index = FAISS.from_texts([json.dumps(trivy_logs)], embeddings)
 

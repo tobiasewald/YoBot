@@ -4,6 +4,7 @@ faiss-cpu
 ollama
 python-dotenv
 requests
-openai
 aiohttp
 asyncio
+langchain-community
+langchain-ollama
