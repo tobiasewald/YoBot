@@ -14,13 +14,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Variables from the .env file
 DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
-MODEL_ANALYSIS_PATH = os.getenv('MODEL_ANALYSIS_PATH')
 MODEL_HUMOR_PATH = os.getenv('MODEL_HUMOR_PATH')
 
 if not DISCORD_WEBHOOK_URL:
     raise ValueError("DISCORD_WEBHOOK_URL is missing in the .env file.")
-if not MODEL_ANALYSIS_PATH or not MODEL_HUMOR_PATH:
-    raise ValueError("MODEL_ANALYSIS_PATH or MODEL_HUMOR_PATH is missing in the .env file.")
+if not MODEL_HUMOR_PATH:
+    raise ValueError("MODEL_HUMOR_PATH is missing in the .env file.")
 
 # Pull model from Ollama
 def pull_model(model_name):
@@ -35,17 +34,6 @@ def pull_model(model_name):
         logging.error(f"Error pulling model {model_name}: {e}")
         raise
 
-# Load Trivy logs from file
-def load_trivy_logs(log_path="trivy_output.json"):
-    try:
-        with open(log_path, "r") as file:
-            logs = json.load(file)
-            logging.debug(f"Trivy logs loaded from {log_path}.")
-            return logs
-    except Exception as e:
-        logging.error(f"Error loading logs: {e}")
-        raise
-
 # Load system prompt
 def load_model_prompt(prompt_path):
     try:
@@ -55,6 +43,17 @@ def load_model_prompt(prompt_path):
             return content
     except Exception as e:
         logging.error(f"Error loading prompt: {e}")
+        raise
+
+# Load Trivy logs from file
+def load_trivy_logs(log_path="trivy_output.json"):
+    try:
+        with open(log_path, "r") as file:
+            logs = json.load(file)
+            logging.debug(f"Trivy logs loaded from {log_path}.")
+            return logs
+    except Exception as e:
+        logging.error(f"Error loading logs: {e}")
         raise
 
 # Combine logs with the prompt
@@ -95,7 +94,7 @@ def clean_discord_message(text, max_length=1900):
         return cleaned
     except Exception as e:
         logging.error(f"Error cleaning message: {e}")
-        return "⚠️ Message could not be processed."
+        return ": Message could not be processed."
 
 # Send message to Discord
 async def send_discord_message_async(message):
@@ -122,20 +121,16 @@ async def main():
 
         # Load logs and prompts
         logs = load_trivy_logs()
-        analysis_prompt_txt = load_model_prompt(MODEL_ANALYSIS_PATH)
         humor_prompt_txt = load_model_prompt(MODEL_HUMOR_PATH)
 
         # Build prompts
-        analysis_prompt = build_prompt_with_logs(analysis_prompt_txt, logs)
         humor_prompt = build_prompt_with_logs(humor_prompt_txt, logs)
 
         # Send prompts to model
-        analysis_response = send_prompt_to_ollama(analysis_prompt)
         humor_response = send_prompt_to_ollama(humor_prompt)
 
-        # Combine and clean the final message
-        combined_message = f"🔍 **Security Analysis**:\n{analysis_response}\n\n😂 **Humorous Summary**:\n{humor_response}"
-        safe_message = clean_discord_message(combined_message)
+        # Clean the final message
+        safe_message = clean_discord_message(humor_response)
 
         # Send to Discord
         await send_discord_message_async(safe_message)

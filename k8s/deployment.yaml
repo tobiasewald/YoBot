@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fastapi-app
+  name: yobot-app
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fastapi
+      app: yobot
   template:
     metadata:
       labels:
-        app: fastapi
+        app: yobot
     spec:
       containers:
-        - name: fastapi
+        - name: yobot
           image: ghcr.io/aiboosts/hello-docker-with-trivy-output:latest
           ports:
             - containerPort: 8080
