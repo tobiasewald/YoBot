@@ -1,6 +1,16 @@
 import requests
 import logging
 import json
+import asyncio
+import aiohttp
+import os
+from dotenv import load_dotenv
+
+# Lade Umgebungsvariablen aus der .env-Datei
+load_dotenv()
+
+# Discord Webhook URL aus der Umgebungsvariablen laden
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 
 # Logging konfigurieren
 logging.basicConfig(level=logging.DEBUG)
@@ -59,14 +69,34 @@ def send_prompt_to_ollama(prompt):
         response = requests.post(url, json=payload)
         response.raise_for_status()
         logging.info("Prompt erfolgreich an Ollama gesendet.")
-        print("Antwort von Ollama:\n", response.json().get("response"))
+        return response.json().get("response")
     except requests.exceptions.RequestException as e:
         logging.error(f"Fehler beim Senden des Prompts: {e}")
         raise
 
-# Hauptfunktion
-if __name__ == "__main__":
+# Discord-Nachricht senden
+async def send_discord_message_async(message):
+    try:
+        payload = {"content": message}
+        headers = {"Content-Type": "application/json"}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(DISCORD_WEBHOOK_URL, json=payload, headers=headers) as response:
+                if response.status == 204:
+                    logging.debug("Nachricht erfolgreich an Discord gesendet.")
+                else:
+                    logging.error(f"Fehler beim Senden: {response.status}")
+    except Exception as e:
+        logging.error(f"Fehler beim Discord-Senden: {e}")
+
+# Hauptablauf
+async def main():
     pull_model()
     logs = load_trivy_logs("trivy_output.json")
     prompt = prepare_analysis_prompt(logs)
-    send_prompt_to_ollama(prompt)
+    ollama_response = send_prompt_to_ollama(prompt)
+    await send_discord_message_async(ollama_response)
+
+# Asynchron starten
+if __name__ == "__main__":
+    asyncio.run(main())
