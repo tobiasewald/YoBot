@@ -1,4 +1,3 @@
-import requests
 import logging
 import json
 import asyncio
@@ -21,16 +20,17 @@ if not DISCORD_WEBHOOK_URL:
 if not MODEL_HUMOR_PATH:
     raise ValueError("MODEL_HUMOR_PATH is missing in the .env file.")
 
-# Pull model from Ollama
-def pull_model(model_name):
+# Pull model from Ollama using aiohttp
+async def pull_model(model_name):
     url = "http://ollama-service:11434/api/pull"
     payload = {"model": model_name}
 
     try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        logging.info(f"Model '{model_name}' pulled successfully.")
-    except requests.exceptions.RequestException as e:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                response.raise_for_status()
+                logging.info(f"Model '{model_name}' pulled successfully.")
+    except Exception as e:
         logging.error(f"Error pulling model {model_name}: {e}")
         raise
 
@@ -60,14 +60,14 @@ def load_trivy_logs(log_path="trivy_output.json"):
 def build_prompt_with_logs(prompt_content, logs):
     try:
         logs_as_text = json.dumps(logs, indent=2)
-        full_prompt = prompt_content + "\n\nAnalyze the following logs:\n" + logs_as_text
+        full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + logs_as_text
         return full_prompt
     except Exception as e:
         logging.error(f"Error building prompt: {e}")
         raise
 
-# Send prompt to Ollama and return response
-def send_prompt_to_ollama(prompt, model="llama3.2"):
+# Send prompt to Ollama and return response using aiohttp
+async def send_prompt_to_ollama(prompt, model="llama3.2"):
     url = "http://ollama-service:11434/api/generate"
     payload = {
         "model": model,
@@ -76,11 +76,12 @@ def send_prompt_to_ollama(prompt, model="llama3.2"):
     }
 
     try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        logging.info("Prompt sent to Ollama successfully.")
-        return response.json().get("response")
-    except requests.exceptions.RequestException as e:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                response.raise_for_status()
+                logging.info("Prompt sent to Ollama successfully.")
+                return (await response.json()).get("response")
+    except Exception as e:
         logging.error(f"Ollama generate error: {e}")
         raise
 
@@ -113,11 +114,27 @@ async def send_discord_message_async(message):
     except Exception as e:
         logging.error(f"Error sending to Discord: {e}")
 
+# Extract information and add humor
+def extract_and_humor_logs(logs):
+    humor_response = []
+    for log in logs:
+        title = log.get("Title", "No Title")
+        severity = log.get("Severity", "Unknown Severity")
+        cwe_ids = log.get("CweIDs", [])
+        cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
+        
+        # Add humor and security awareness
+        humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
+                              f"Severity: {severity} | CVSS Score: {cvss_score}\n"
+                              f"CWE IDs: {', '.join(cwe_ids)}\n"
+                              f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
+    return humor_response
+
 # Main process
 async def main():
     try:
         # Pull the required model
-        pull_model("llama3.2")
+        await pull_model("llama3.2")
 
         # Load logs and prompts
         logs = load_trivy_logs()
@@ -127,10 +144,16 @@ async def main():
         humor_prompt = build_prompt_with_logs(humor_prompt_txt, logs)
 
         # Send prompts to model
-        humor_response = send_prompt_to_ollama(humor_prompt)
+        humor_response = await send_prompt_to_ollama(humor_prompt)
+
+        # Generate humorous responses
+        humorous_logs = extract_and_humor_logs(logs)
+
+        # Combine model and humor logs
+        full_message = "\n\n".join(humorous_logs) + "\n" + humor_response
 
         # Clean the final message
-        safe_message = clean_discord_message(humor_response)
+        safe_message = clean_discord_message(full_message)
 
         # Send to Discord
         await send_discord_message_async(safe_message)
