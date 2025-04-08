@@ -150,3 +150,11 @@ curl http://localhost:11434/api/ps
 
  DISCORD_WEBHOOK_URL='https://discord.com/api/webhooks/1358542446031798624/S-90hr030GtqcMqfWg6rr5YWlQO7qVcZHK0RyvyyQUDq6Y6r54lliQ8XpEoLsmgdEtTi'
 
+curl http://ollama-service:11434/api/pull -d '{ "model": "llama3.2" }'
+
+-----
+Models auflisten
+curl -X GET http://ollama-service:11434/v1/models
+
+Modell pull
+curl http://ollama-service:11434/api/pull -d '{ "model": "llama3.2" }'
