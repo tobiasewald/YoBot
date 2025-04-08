@@ -51,6 +51,8 @@ def load_trivy_logs(log_path="trivy_output.json"):
         with open(log_path, "r") as file:
             logs = json.load(file)
             logging.debug(f"Trivy logs loaded from {log_path}.")
+            # Debugging: check the structure of logs
+            logging.debug(f"Loaded logs: {logs}")
             return logs
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
@@ -117,17 +119,21 @@ async def send_discord_message_async(message):
 # Extract information and add humor
 def extract_and_humor_logs(logs):
     humor_response = []
-    for log in logs:
-        title = log.get("Title", "No Title")
-        severity = log.get("Severity", "Unknown Severity")
-        cwe_ids = log.get("CweIDs", [])
-        cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
-        
-        # Add humor and security awareness
-        humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
-                              f"Severity: {severity} | CVSS Score: {cvss_score}\n"
-                              f"CWE IDs: {', '.join(cwe_ids)}\n"
-                              f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
+    if isinstance(logs, list):  # Ensure that logs is a list
+        for log in logs:
+            title = log.get("Title", "No Title")
+            severity = log.get("Severity", "Unknown Severity")
+            cwe_ids = log.get("CweIDs", [])
+            cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
+            
+            # Add humor and security awareness
+            humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
+                                  f"Severity: {severity} | CVSS Score: {cvss_score}\n"
+                                  f"CWE IDs: {', '.join(cwe_ids)}\n"
+                                  f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
+    else:
+        logging.error(f"Logs are not in the expected list format: {logs}")
+        humor_response.append("Error: Logs are in an unexpected format.")
     return humor_response
 
 # Main process
