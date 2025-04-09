@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-Pillow
-discord-webhook
-langchain
-faiss-cpu
-ollama
