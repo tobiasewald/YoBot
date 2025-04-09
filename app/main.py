@@ -51,7 +51,6 @@ def load_trivy_logs(log_path="trivy_output.json"):
         with open(log_path, "r") as file:
             logs = json.load(file)
             logging.debug(f"Trivy logs loaded from {log_path}.")
-            # Debugging: check the structure of logs
             logging.debug(f"Loaded logs: {logs}")
             return logs
     except Exception as e:
@@ -119,21 +118,20 @@ async def send_discord_message_async(message):
 # Extract information and add humor
 def extract_and_humor_logs(logs):
     humor_response = []
-    if isinstance(logs, list):  # Ensure that logs is a list
+    if isinstance(logs, list):
         for log in logs:
-            title = log.get("Title", "No Title")
-            severity = log.get("Severity", "Unknown Severity")
-            cwe_ids = log.get("CweIDs", [])
-            cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
+            title = log.get("name", "No Title")
+            severity = log.get("severity", "Unknown Severity")
+            cwe_ids = log.get("cwe_ids", [])
+            cvss_score = log.get("vendor_severity", {}).get("bitnami", "N/A")
             
-            # Add humor and security awareness
             humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
                                   f"Severity: {severity} | CVSS Score: {cvss_score}\n"
-                                  f"CWE IDs: {', '.join(cwe_ids)}\n"
-                                  f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
+                                  f"CWE IDs: {', '.join(cwe_ids) if cwe_ids else 'None'}\n"
+                                  f"🎉 **Recommended Action:** Patch it before it patches your reputation! 🔒😎\n")
     else:
         logging.error(f"Logs are not in the expected list format: {logs}")
-        humor_response.append("Error: Logs are in an unexpected format.")
+        humor_response.append("⚠️ Error: Logs are in an unexpected format.")
     return humor_response
 
 # Main process
@@ -142,18 +140,20 @@ async def main():
         # Pull the required model
         await pull_model("llama3.2")
 
-        # Load logs and prompts
+        # Load logs and prompt
         logs = load_trivy_logs()
+        vulnerabilities = logs.get("vulnerabilities", [])  # Extract only the list
+
         humor_prompt_txt = load_model_prompt(MODEL_HUMOR_PATH)
 
         # Build prompts
-        humor_prompt = build_prompt_with_logs(humor_prompt_txt, logs)
+        humor_prompt = build_prompt_with_logs(humor_prompt_txt, vulnerabilities)
 
         # Send prompts to model
         humor_response = await send_prompt_to_ollama(humor_prompt)
 
         # Generate humorous responses
-        humorous_logs = extract_and_humor_logs(logs)
+        humorous_logs = extract_and_humor_logs(vulnerabilities)
 
         # Combine model and humor logs
         full_message = "\n\n".join(humorous_logs) + "\n" + humor_response
