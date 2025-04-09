@@ -51,7 +51,12 @@ def load_trivy_logs(log_path="trivy_output.json"):
         with open(log_path, "r") as file:
             logs = json.load(file)
             logging.debug(f"Trivy logs loaded from {log_path}.")
+            if not logs:
+                logging.warning("No vulnerabilities found in the Trivy logs.")
             return logs
+    except json.JSONDecodeError as e:
+        logging.error(f"Error decoding JSON from {log_path}: {e}")
+        raise
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
         raise
@@ -118,7 +123,7 @@ async def send_discord_message_async(message):
 # Extract information and add humor
 def extract_and_humor_logs(logs):
     humor_response = []
-    if isinstance(logs, list):  # Ensure that logs is a list
+    if isinstance(logs, list) and logs:  # Ensure that logs is a non-empty list
         for log in logs:
             title = log.get("Title", "No Title")
             severity = log.get("Severity", "Unknown Severity")
@@ -133,8 +138,8 @@ def extract_and_humor_logs(logs):
                                   f"Fixed Version: {fixed_version}\n"
                                   f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
     else:
-        logging.error(f"Logs are not in the expected list format: {logs}")
-        humor_response.append("Error: Logs are in an unexpected format.")
+        logging.error(f"Logs are not in the expected list format or are empty: {logs}")
+        humor_response.append("Error: Logs are in an unexpected format or empty.")
     return humor_response
 
 # Main process
