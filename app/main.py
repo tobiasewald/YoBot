@@ -49,25 +49,33 @@ def load_model_prompt(prompt_path):
 def load_trivy_logs(log_path="trivy_output.json"):
     try:
         with open(log_path, "r") as file:
-            logs = json.load(file)
-            logging.debug(f"Loaded logs: {logs}")  # Debug log to check structure
-            
-            # Check if logs are in the format {'vulnerabilities': [...]}, adjust accordingly
-            if isinstance(logs, dict) and 'vulnerabilities' in logs:
-                logs = logs['vulnerabilities']
-            
-            # Ensure logs is a list of dictionaries
-            if not isinstance(logs, list):
+            raw_data = json.load(file)
+            logging.debug(f"Raw Trivy log content: {json.dumps(raw_data, indent=2)}")
+
+            vulnerabilities = []
+            if isinstance(raw_data, dict) and "Results" in raw_data:
+                for result in raw_data["Results"]:
+                    vulns = result.get("Vulnerabilities", [])
+                    if isinstance(vulns, list):
+                        vulnerabilities.extend(vulns)
+
+            elif isinstance(raw_data, dict) and "vulnerabilities" in raw_data:
+                vulnerabilities = raw_data["vulnerabilities"]
+
+            # Final structure check
+            if not isinstance(vulnerabilities, list):
                 logging.error("Log format error: Logs should be a list of dictionaries.")
                 return []
-            
-            return logs
+
+            logging.info(f"Extracted {len(vulnerabilities)} vulnerability entries.")
+            return vulnerabilities
     except ValueError as e:
         logging.error(f"Log format error: {e}")
         return []
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
         return []
+
 
 # Combine logs with the prompt
 def build_prompt_with_logs(prompt_content, logs):
