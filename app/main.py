@@ -45,13 +45,18 @@ def load_model_prompt(prompt_path):
         logging.error(f"Error loading prompt: {e}")
         raise
 
-# Load Trivy logs from file
+# Load Trivy logs from file and ensure correct structure
 def load_trivy_logs(log_path="trivy_output.json"):
     try:
         with open(log_path, "r") as file:
             logs = json.load(file)
-            logging.debug(f"Trivy logs loaded from {log_path}.")
+            logging.debug(f"Loaded logs: {logs}")  # Debug log to check structure
+            if not isinstance(logs, list):  # Check if it's a list
+                raise ValueError("Logs should be a list of dictionaries.")
             return logs
+    except ValueError as e:
+        logging.error(f"Log format error: {e}")
+        raise
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
         raise
@@ -59,22 +64,12 @@ def load_trivy_logs(log_path="trivy_output.json"):
 # Combine logs with the prompt
 def build_prompt_with_logs(prompt_content, logs):
     try:
+        # Ensure that logs are in the correct format (list of dictionaries)
         if not isinstance(logs, list):
             raise ValueError("Logs should be a list of dictionaries.")
         
-        logs_as_text = []
-        for i, log in enumerate(logs):
-            if isinstance(log, dict):
-                title = log.get('Title', 'No Title Available')
-                cvss_score = log.get('CVSS', {}).get('bitnami', {}).get('V3Score', 'N/A')
-                logs_as_text.append(f"Vulnerability {i+1}: {title} - CVSS Score: {cvss_score}")
-            else:
-                logging.warning(f"Log entry {i+1} is not a dictionary: {log}")
-        
-        if not logs_as_text:
-            raise ValueError("No valid logs found to process.")
-
-        full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + "\n\n".join(logs_as_text)
+        logs_as_text = "\n\n".join([f"Vulnerability {i+1}: {log.get('Title', 'No Title')} - CVSS Score: {log.get('CVSS', {}).get('bitnami', {}).get('V3Score', 'N/A')}" for i, log in enumerate(logs)])
+        full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + logs_as_text
         return full_prompt
     except Exception as e:
         logging.error(f"Error building prompt: {e}")
