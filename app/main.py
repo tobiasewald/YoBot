@@ -141,8 +141,8 @@ async def send_discord_message_async(message):
     except Exception as e:
         logging.error(f"Error sending to Discord: {e}")
 
-# Extract information and add humor with Sheldon Cooper-style sarcasm
-def extract_and_humor_logs(logs):
+# Extract information and allow the model to generate humor automatically
+def extract_and_generate_humor_from_model(logs, model_response):
     humor_response = []
     if isinstance(logs, list):  # Ensure that logs is a list
         for log in logs:
@@ -151,14 +151,13 @@ def extract_and_humor_logs(logs):
             cwe_ids = log.get("CweIDs", [])
             cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
             fixed_version = log.get("References", [])[0] if log.get("References") else "No fix available"
-
-            # Sheldon Cooper-style humor
+            
+            # Generate humor based on the model response
             humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
                                   f"Severity: {severity} | CVSS Score: {cvss_score}\n"
                                   f"CWE IDs: {', '.join(cwe_ids) if cwe_ids else 'None'}\n"
                                   f"Fixed Version: {fixed_version}\n"
-                                  f"🎉 **Recommended Action:** Please patch it, or maybe we could just invite a hacker over for dinner? (Because we all know how fun that is!) 😏\n"
-                                  f"Seriously though, if you don’t fix this, even Penny would be able to hack your system. (And she’s *not* a software engineer.) 🧑‍💻")
+                                  f"🎉 **Recommended Action:** {model_response}\n")
     else:
         logging.error(f"Logs are not in the expected list format: {logs}")
         humor_response.append("Error: Logs are in an unexpected format.")
@@ -190,10 +189,10 @@ async def main():
         humor_response = await send_prompt_to_ollama(humor_prompt, temperature=1.0)
 
         # Generate humorous responses
-        humorous_logs = extract_and_humor_logs(logs)
+        humorous_logs = extract_and_generate_humor_from_model(logs, humor_response)
 
         # Combine model and humor logs
-        full_message = "\n\n".join(humorous_logs) + "\n" + humor_response
+        full_message = "\n\n".join(humorous_logs)
 
         # Clean the final message
         safe_message = clean_discord_message(full_message)
