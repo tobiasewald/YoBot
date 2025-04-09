@@ -51,12 +51,7 @@ def load_trivy_logs(log_path="trivy_output.json"):
         with open(log_path, "r") as file:
             logs = json.load(file)
             logging.debug(f"Trivy logs loaded from {log_path}.")
-            if not logs:
-                logging.warning("No vulnerabilities found in the Trivy logs.")
             return logs
-    except json.JSONDecodeError as e:
-        logging.error(f"Error decoding JSON from {log_path}: {e}")
-        raise
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
         raise
@@ -64,8 +59,22 @@ def load_trivy_logs(log_path="trivy_output.json"):
 # Combine logs with the prompt
 def build_prompt_with_logs(prompt_content, logs):
     try:
-        logs_as_text = "\n\n".join([f"Vulnerability {i+1}: {log['Title']} - CVSS Score: {log['CVSS']['bitnami']['V3Score']}" for i, log in enumerate(logs)])
-        full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + logs_as_text
+        if not isinstance(logs, list):
+            raise ValueError("Logs should be a list of dictionaries.")
+        
+        logs_as_text = []
+        for i, log in enumerate(logs):
+            if isinstance(log, dict):
+                title = log.get('Title', 'No Title Available')
+                cvss_score = log.get('CVSS', {}).get('bitnami', {}).get('V3Score', 'N/A')
+                logs_as_text.append(f"Vulnerability {i+1}: {title} - CVSS Score: {cvss_score}")
+            else:
+                logging.warning(f"Log entry {i+1} is not a dictionary: {log}")
+        
+        if not logs_as_text:
+            raise ValueError("No valid logs found to process.")
+
+        full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + "\n\n".join(logs_as_text)
         return full_prompt
     except Exception as e:
         logging.error(f"Error building prompt: {e}")
@@ -123,7 +132,7 @@ async def send_discord_message_async(message):
 # Extract information and add humor
 def extract_and_humor_logs(logs):
     humor_response = []
-    if isinstance(logs, list) and logs:  # Ensure that logs is a non-empty list
+    if isinstance(logs, list):  # Ensure that logs is a list
         for log in logs:
             title = log.get("Title", "No Title")
             severity = log.get("Severity", "Unknown Severity")
@@ -138,8 +147,8 @@ def extract_and_humor_logs(logs):
                                   f"Fixed Version: {fixed_version}\n"
                                   f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
     else:
-        logging.error(f"Logs are not in the expected list format or are empty: {logs}")
-        humor_response.append("Error: Logs are in an unexpected format or empty.")
+        logging.error(f"Logs are not in the expected list format: {logs}")
+        humor_response.append("Error: Logs are in an unexpected format.")
     return humor_response
 
 # Main process
