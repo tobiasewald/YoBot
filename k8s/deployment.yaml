@@ -16,5 +16,6 @@ spec:
       containers:
         - name: yobot
           image: ghcr.io/aiboosts/yobot-with-trivy-output:latest
+          command: ["/bin/bash", "-c", "while true; do sleep 3600; done"]
       imagePullSecrets:
         - name: ghcr-secret  # Das ImagePullSecret, das du vorher erstellt hast
