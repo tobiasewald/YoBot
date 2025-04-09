@@ -51,9 +51,16 @@ def load_trivy_logs(log_path="trivy_output.json"):
         with open(log_path, "r") as file:
             logs = json.load(file)
             logging.debug(f"Loaded logs: {logs}")  # Debug log to check structure
-            if not isinstance(logs, list):  # Check if it's a list
+            
+            # Check if logs are in the format {'vulnerabilities': [...]}, adjust accordingly
+            if isinstance(logs, dict) and 'vulnerabilities' in logs:
+                logs = logs['vulnerabilities']
+            
+            # Ensure logs is a list of dictionaries
+            if not isinstance(logs, list):
                 logging.error("Log format error: Logs should be a list of dictionaries.")
                 return []
+            
             return logs
     except ValueError as e:
         logging.error(f"Log format error: {e}")
