@@ -47,7 +47,6 @@ def load_trivy_logs(log_path="trivy_output.json"):
                     vulns = result.get("Vulnerabilities", [])
                     if isinstance(vulns, list):
                         vulnerabilities.extend(vulns)
-
             elif isinstance(raw_data, dict) and "vulnerabilities" in raw_data:
                 vulnerabilities = raw_data["vulnerabilities"]
 
@@ -61,29 +60,30 @@ def load_trivy_logs(log_path="trivy_output.json"):
         logging.error(f"Error loading logs: {e}")
         return []
 
-# Combine logs with humor prompt
+# Build funny + sarcastic prompt with logs
 def build_prompt_with_logs(logs):
     try:
         with open(MODEL_HUMOR_PATH, "r") as file:
             humor_base = file.read().strip()
 
-        if not isinstance(logs, list):
-            logging.error("Error: Logs are not in the expected format.")
-            return ""
-
         logs_as_text = "\n\n".join([
-            f"💥 Vulnerability {i+1}: {log.get('Title', 'No Title')}\n"
-            f"Severity: {log.get('Severity', 'N/A')} | CVSS Score: {log.get('CVSS', {}).get('bitnami', {}).get('V3Score', 'N/A')}\n"
-            f"CWE IDs: {', '.join(log.get('CweIDs', [])) if log.get('CweIDs') else 'None'}\n"
-            f"Fixed Version: {log.get('References', [])[0] if log.get('References') else 'N/A'}"
+            f"🔥 Vulnerability {i+1}: {log.get('Title', 'No Title')}\n"
+            f"Severity: {log.get('Severity', 'N/A')} | CVSS: {log.get('CVSS', {}).get('bitnami', {}).get('V3Score', 'N/A')}\n"
+            f"CWE: {', '.join(log.get('CweIDs', [])) if log.get('CweIDs') else 'None'}\n"
+            f"Fix it (maybe?): {log.get('References', [])[0] if log.get('References') else 'No clue, good luck'}"
             for i, log in enumerate(logs)
         ])
 
         return (
             f"{humor_base}\n\n"
-            f"Analyze the following security vulnerabilities and generate a humorous, yet informative summary for each:\n\n"
+            f"You are YoBot — a sarcastic AI DevSecOps assistant who turns boring security reports into hilarious, meme-worthy Slack/Discord messages.\n\n"
+            f"Your style is inspired by:\n"
+            f"- Gordon Ramsay yelling at bugs\n"
+            f"- A stand-up comedian doing infosec\n"
+            f"- A DevOps intern who’s had enough\n\n"
+            f"Now, here's a list of vulnerabilities. For each one, roast it, mock its severity like a drama queen, and end with a funny (but useful) recommendation.\n\n"
             f"{logs_as_text}\n\n"
-            f"⚠️ Avoid repeating jokes and include a light recommendation."
+            f"🎭 Keep it short, sharp, sassy, and never boring. Go full Sheldon Cooper if needed."
         )
     except Exception as e:
         logging.error(f"Error building prompt with humor path: {e}")
@@ -104,10 +104,11 @@ async def send_prompt_to_ollama(prompt, model="llama3.2", temperature=1.0):
             async with session.post(url, json=payload) as response:
                 response.raise_for_status()
                 logging.info("Prompt sent to Ollama successfully.")
-                return (await response.json()).get("response")
+                result = await response.json()
+                return result.get("response", "No funny response generated.")
     except Exception as e:
         logging.error(f"Ollama generate error: {e}")
-        return "Error generating response from Ollama."
+        return "Oops, I tried to be funny, but I crashed harder than your CI pipeline."
 
 # Clean output for Discord
 def clean_discord_message(text, max_length=1900):
@@ -137,28 +138,6 @@ async def send_discord_message_async(message):
     except Exception as e:
         logging.error(f"Error sending to Discord: {e}")
 
-# Format response
-def extract_and_generate_humor_from_model(logs, model_response):
-    humor_response = []
-    if isinstance(logs, list):
-        for log in logs:
-            title = log.get("Title", "No Title")
-            severity = log.get("Severity", "Unknown")
-            cwe_ids = log.get("CweIDs", [])
-            cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
-            fixed_version = log.get("References", [])[0] if log.get("References") else "No fix available"
-
-            humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
-                                  f"Severity: {severity} | CVSS Score: {cvss_score}\n"
-                                  f"CWE IDs: {', '.join(cwe_ids) if cwe_ids else 'None'}\n"
-                                  f"Fixed Version: {fixed_version}\n"
-                                  f"🎉 **Recommended Action:** {model_response}\n")
-    else:
-        logging.error("Logs are not in the expected format.")
-        humor_response.append("Error: Logs are in an unexpected format.")
-
-    return humor_response
-
 # Main entry
 async def main():
     try:
@@ -173,10 +152,9 @@ async def main():
             logging.error("Failed to build prompt.")
             return
 
-        response = await send_prompt_to_ollama(prompt, temperature=1.0)
-        humorous_logs = extract_and_generate_humor_from_model(logs, response)
-        safe_message = clean_discord_message("\n\n".join(humorous_logs))
-        await send_discord_message_async(safe_message)
+        response = await send_prompt_to_ollama(prompt, temperature=1.1)
+        final_message = clean_discord_message(response)
+        await send_discord_message_async(final_message)
 
     except Exception as e:
         logging.error(f"Error in main process: {e}")
