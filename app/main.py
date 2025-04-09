@@ -34,7 +34,7 @@ async def pull_model(model_name):
         logging.error(f"Error pulling model {model_name}: {e}")
         raise
 
-# Load system prompt
+# Load system prompt with sarcasm
 def load_model_prompt(prompt_path):
     try:
         with open(prompt_path, "r") as file:
@@ -51,7 +51,6 @@ def load_trivy_logs(log_path="trivy_output.json"):
         with open(log_path, "r") as file:
             logs = json.load(file)
             logging.debug(f"Trivy logs loaded from {log_path}.")
-            logging.debug(f"Loaded logs: {logs}")
             return logs
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
@@ -60,7 +59,7 @@ def load_trivy_logs(log_path="trivy_output.json"):
 # Combine logs with the prompt
 def build_prompt_with_logs(prompt_content, logs):
     try:
-        logs_as_text = json.dumps(logs, indent=2)
+        logs_as_text = "\n\n".join([f"Vulnerability {i+1}: {log['Title']} - CVSS Score: {log['CVSS']['bitnami']['V3Score']}" for i, log in enumerate(logs)])
         full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + logs_as_text
         return full_prompt
     except Exception as e:
@@ -68,11 +67,12 @@ def build_prompt_with_logs(prompt_content, logs):
         raise
 
 # Send prompt to Ollama and return response using aiohttp
-async def send_prompt_to_ollama(prompt, model="llama3.2"):
+async def send_prompt_to_ollama(prompt, model="llama3.2", temperature=1.0):
     url = "http://ollama-service:11434/api/generate"
     payload = {
         "model": model,
         "prompt": prompt,
+        "temperature": temperature,  # Set temperature for humor
         "stream": False
     }
 
@@ -115,50 +115,54 @@ async def send_discord_message_async(message):
     except Exception as e:
         logging.error(f"Error sending to Discord: {e}")
 
-# Generate funny and helpful explanations from Trivy logs
+# Extract information and add humor
 def extract_and_humor_logs(logs):
     humor_response = []
-    if isinstance(logs, list):
+    if isinstance(logs, list):  # Ensure that logs is a list
         for log in logs:
-            title = log.get("Title", "Unnamed Vulnerability")
-            severity = log.get("Severity", "Unknown")
-            cve_id = log.get("VulnerabilityID", "N/A")
-            description = log.get("Description", "No description available.")
-            cvss_score = log.get("CVSS", {}).get("nvd", {}).get("V3Score", "N/A")
-            cvss_vector = log.get("CVSS", {}).get("nvd", {}).get("Vectors", "N/A")
+            title = log.get("Title", "No Title")
+            severity = log.get("Severity", "Unknown Severity")
+            cwe_ids = log.get("CweIDs", [])
+            cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
+            fixed_version = log.get("References", [])[0] if log.get("References") else "No fix available"
 
-            humor_response.append(
-                f"🔍 **Vulnerability:** {title}\n"
-                f"🧬 **CVE ID:** {cve_id}\n"
-                f"📜 **Description:** {description}\n"
-                f"💣 **Severity:** {severity} | CVSS: {cvss_score} ({cvss_vector})\n"
-                f"🤣 **YoBot says:** This one's like giving admin rights to your cat. Fluffy doesn't need root access.\n"
-                f"✅ **Fix it:** Patch it now or face the wrath of the bugs!\n"
-                f"{'-'*50}"
-            )
+            # Add humor and security awareness
+            humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
+                                  f"Severity: {severity} | CVSS Score: {cvss_score}\n"
+                                  f"CWE IDs: {', '.join(cwe_ids)}\n"
+                                  f"Fixed Version: {fixed_version}\n"
+                                  f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
     else:
         logging.error(f"Logs are not in the expected list format: {logs}")
-        humor_response.append("⚠️ Error: Logs are in an unexpected format.")
+        humor_response.append("Error: Logs are in an unexpected format.")
     return humor_response
 
 # Main process
 async def main():
     try:
+        # Pull the required model
         await pull_model("llama3.2")
 
+        # Load logs and prompts
         logs = load_trivy_logs()
         humor_prompt_txt = load_model_prompt(MODEL_HUMOR_PATH)
 
+        # Build prompts
         humor_prompt = build_prompt_with_logs(humor_prompt_txt, logs)
 
-        model_response = await send_prompt_to_ollama(humor_prompt)
+        # Send prompts to model with a higher temperature for humor
+        humor_response = await send_prompt_to_ollama(humor_prompt, temperature=1.0)
 
+        # Generate humorous responses
         humorous_logs = extract_and_humor_logs(logs)
 
-        full_message = "\n\n".join(humorous_logs) + "\n🧠 **YoBot’s AI Wisdom:**\n" + model_response
+        # Combine model and humor logs
+        full_message = "\n\n".join(humorous_logs) + "\n" + humor_response
 
+        # Clean the final message
         safe_message = clean_discord_message(full_message)
 
+        # Send to Discord
         await send_discord_message_async(safe_message)
 
     except Exception as e:
