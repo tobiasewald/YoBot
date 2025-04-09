@@ -52,28 +52,30 @@ def load_trivy_logs(log_path="trivy_output.json"):
             logs = json.load(file)
             logging.debug(f"Loaded logs: {logs}")  # Debug log to check structure
             if not isinstance(logs, list):  # Check if it's a list
-                raise ValueError("Logs should be a list of dictionaries.")
+                logging.error("Log format error: Logs should be a list of dictionaries.")
+                return []
             return logs
     except ValueError as e:
         logging.error(f"Log format error: {e}")
-        raise
+        return []
     except Exception as e:
         logging.error(f"Error loading logs: {e}")
-        raise
+        return []
 
 # Combine logs with the prompt
 def build_prompt_with_logs(prompt_content, logs):
     try:
         # Ensure that logs are in the correct format (list of dictionaries)
         if not isinstance(logs, list):
-            raise ValueError("Logs should be a list of dictionaries.")
+            logging.error("Error: Logs are not in the expected format.")
+            return ""
         
         logs_as_text = "\n\n".join([f"Vulnerability {i+1}: {log.get('Title', 'No Title')} - CVSS Score: {log.get('CVSS', {}).get('bitnami', {}).get('V3Score', 'N/A')}" for i, log in enumerate(logs)])
         full_prompt = prompt_content + "\n\nAnalyze the following logs with a touch of humor:\n" + logs_as_text
         return full_prompt
     except Exception as e:
         logging.error(f"Error building prompt: {e}")
-        raise
+        return ""
 
 # Send prompt to Ollama and return response using aiohttp
 async def send_prompt_to_ollama(prompt, model="llama3.2", temperature=1.0):
@@ -93,7 +95,7 @@ async def send_prompt_to_ollama(prompt, model="llama3.2", temperature=1.0):
                 return (await response.json()).get("response")
     except Exception as e:
         logging.error(f"Ollama generate error: {e}")
-        raise
+        return "Error generating response from Ollama."
 
 # Clean and trim message for Discord
 def clean_discord_message(text, max_length=1900):
@@ -124,7 +126,7 @@ async def send_discord_message_async(message):
     except Exception as e:
         logging.error(f"Error sending to Discord: {e}")
 
-# Extract information and add humor
+# Extract information and add humor with Sheldon Cooper-style sarcasm
 def extract_and_humor_logs(logs):
     humor_response = []
     if isinstance(logs, list):  # Ensure that logs is a list
@@ -135,15 +137,17 @@ def extract_and_humor_logs(logs):
             cvss_score = log.get("CVSS", {}).get("bitnami", {}).get("V3Score", "N/A")
             fixed_version = log.get("References", [])[0] if log.get("References") else "No fix available"
 
-            # Add humor and security awareness
+            # Sheldon Cooper-style humor
             humor_response.append(f"💥 **Security Alert:** {title} 💥\n"
                                   f"Severity: {severity} | CVSS Score: {cvss_score}\n"
-                                  f"CWE IDs: {', '.join(cwe_ids)}\n"
+                                  f"CWE IDs: {', '.join(cwe_ids) if cwe_ids else 'None'}\n"
                                   f"Fixed Version: {fixed_version}\n"
-                                  f"🎉 **Recommended Action:** Please patch it before your code turns into a hacker's playground! 😎\n")
+                                  f"🎉 **Recommended Action:** Please patch it, or maybe we could just invite a hacker over for dinner? (Because we all know how fun that is!) 😏\n"
+                                  f"Seriously though, if you don’t fix this, even Penny would be able to hack your system. (And she’s *not* a software engineer.) 🧑‍💻")
     else:
         logging.error(f"Logs are not in the expected list format: {logs}")
         humor_response.append("Error: Logs are in an unexpected format.")
+    
     return humor_response
 
 # Main process
@@ -154,10 +158,18 @@ async def main():
 
         # Load logs and prompts
         logs = load_trivy_logs()
+        if not logs:  # Exit early if logs are empty or have an error
+            logging.error("No valid logs to process.")
+            return
+
         humor_prompt_txt = load_model_prompt(MODEL_HUMOR_PATH)
 
         # Build prompts
         humor_prompt = build_prompt_with_logs(humor_prompt_txt, logs)
+
+        if not humor_prompt:  # Exit early if there's an issue with the prompt
+            logging.error("Failed to build a valid prompt.")
+            return
 
         # Send prompts to model with a higher temperature for humor
         humor_response = await send_prompt_to_ollama(humor_prompt, temperature=1.0)
