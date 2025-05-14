@@ -22,7 +22,7 @@ if not MODEL_HUMOR_PATH:
 
 # Pull model from Ollama using aiohttp
 async def pull_model(model_name):
-    url = "http://ollama-service:11434/api/pull"
+    url = "http://localhost:11434/api/pull"
     payload = {"model": model_name}
 
     try:
